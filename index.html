@@ -1,0 +1,2626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IGCSE Latin Vocabulary Tester – Latin → English</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+    body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+    #container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .card {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 16px;
+    }
+    h1 {
+        margin-top: 0;
+        font-size: 26px;
+    }
+    h2 {
+        margin-top: 0;
+        font-size: 20px;
+    }
+    .mode-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .mode-row span.label {
+        font-size: 14px;
+        font-weight: 500;
+    }
+    button {
+        cursor: pointer;
+    }
+    .chip-btn {
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: none;
+        background: #222;
+        color: white;
+        font-size: 14px;
+    }
+    .chip-btn.secondary {
+        background: #e0e0e0;
+        color: #222;
+    }
+    .chip-btn.danger {
+        background: #b00020;
+        color: #fff;
+    }
+    .chip-btn.active {
+        background: #0070f3;
+        color: #fff;
+    }
+    .filters {
+        margin-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+    }
+    .filters span {
+        font-size: 13px;
+    }
+    .filters button {
+        padding: 4px 8px;
+        font-size: 12px;
+        border-radius: 999px;
+        border: none;
+        background: #eee;
+    }
+    .filters button.active {
+        background: #0070f3;
+        color: #fff;
+    }
+    #stats {
+        font-size: 13px;
+        color: #444;
+        margin-top: 6px;
+    }
+    #question-box {
+        margin-top: 10px;
+        font-size: 20px;
+        font-weight: 600;
+    }
+    #pos-info {
+        font-size: 13px;
+        color: #666;
+        margin-top: 4px;
+    }
+    #answer-input {
+        margin-top: 12px;
+        width: 100%;
+        padding: 10px;
+        font-size: 18px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+    #submit-btn, #next-btn {
+        padding: 9px 18px;
+        margin-top: 10px;
+        font-size: 15px;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        background: #0070f3;
+        color: #fff;
+    }
+    #next-btn {
+        background: #222;
+        margin-left: 8px;
+    }
+    #result {
+        margin-top: 10px;
+        font-size: 16px;
+        min-height: 22px;
+    }
+    #result.correct {
+        color: #0a7c27;
+    }
+    #result.incorrect {
+        color: #c10c0c;
+    }
+    #options {
+        margin-top: 10px;
+    }
+    .option {
+        background: #f7f7f7;
+        padding: 10px;
+        margin: 6px 0;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        cursor: pointer;
+    }
+    .option:hover {
+        background: #ececec;
+    }
+    .option.correct {
+        border-color: #0a7c27;
+        background: #e6f5ea;
+    }
+    .option.incorrect {
+        border-color: #c10c0c;
+        background: #fde8e8;
+    }
+    #report-area {
+        width: 100%;
+        min-height: 140px;
+        margin-top: 8px;
+        padding: 8px;
+        font-size: 13px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    #report-area:empty::before {
+        content: "Mistake report will appear here. Do some questions, then click \"Generate report\".";
+        color: #888;
+    }
+    @media (max-width: 640px) {
+        h1 { font-size: 22px; }
+        .mode-row { flex-direction: column; align-items: flex-start; }
+    }
+</style>
+</head>
+
+<body>
+<div id="container">
+    <div class="card">
+        <h1>IGCSE Latin Vocabulary Tester</h1>
+        <p>Latin → English, using your full IGCSE list. Choose answer mode, filter by initial letter, and track mistakes.</p>
+
+        <div class="mode-row">
+            <span class="label">Answer mode:</span>
+            <button id="mode-typed" class="chip-btn active" onclick="setAnswerMode('typed')">Type in</button>
+            <button id="mode-mcq" class="chip-btn secondary" onclick="setAnswerMode('mcq')">Multiple choice</button>
+        </div>
+
+        <div class="mode-row">
+            <span class="label">Question source:</span>
+            <button id="pool-all" class="chip-btn active" onclick="setMistakeMode(false)">All words</button>
+            <button id="pool-mistakes" class="chip-btn secondary" onclick="setMistakeMode(true)">Study mistakes only</button>
+        </div>
+
+        <div class="mode-row">
+            <button class="chip-btn secondary" onclick="resetProgress()">Reset stats</button>
+            <button class="chip-btn secondary" onclick="generateReport()">Generate report</button>
+        </div>
+
+        <div class="filters">
+            <span>Filter by first letter (Latin):</span>
+            <button data-letter="all" class="active" onclick="setLetter(null)">All</button>
+            <span id="letter-buttons"></span>
+        </div>
+
+        <div id="stats"></div>
+    </div>
+
+    <div class="card">
+        <h2>Question</h2>
+        <div id="question-box">Click “Next” to begin.</div>
+        <div id="pos-info"></div>
+
+        <input
+            id="answer-input"
+            type="text"
+            placeholder="Type the English meaning…"
+            onkeydown="if (event.key === 'Enter') submitAnswer();"
+        >
+
+        <div id="options"></div>
+
+        <div>
+            <button id="submit-btn" onclick="submitAnswer()">Submit</button>
+            <button id="next-btn" onclick="nextQuestion()">Next</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <div class="card">
+        <h2>Mistake report</h2>
+        <p style="font-size:13px; margin-top:0;">
+            This report shows each Latin word you have answered incorrectly, how many times,
+            and its English meaning. You can copy–paste this as a record or revision list.
+        </p>
+        <textarea id="report-area" readonly></textarea>
+    </div>
+</div>
+
+<script>
+/*
+ We parse your attached list directly.
+ The text below is exactly the Latin/English pairs you provided,
+ alternating: Latin line, English line, Latin line, English line, ...
+*/
+const RAW_LIST = `
+a (ab) + abl.
+by, from
+
+absum, abesse, afui
+I am absent, I am away
+
+accipio, -ere, accepi, acceptum
+I receive, I accept
+
+acer, acris, acre
+keen, fierce
+
+ac, atque
+and
+
+ad + acc.
+to, towards, near
+
+adeo
+to such an extent, so much
+
+adhuc
+still, up till now
+
+adiuvo (1)
+I help
+
+adsum, adesse, adfui
+I am present, I am here
+
+advenio (4)
+I reach, I arrive
+
+adulescens, adulescentis m f.
+young man, young woman
+
+aedifico (1)
+I build
+
+aeger, -gra, -grum
+ill, sick
+
+ager, agri m
+field
+
+aggredior, aggredi, aggressus sum
+I attack
+
+agmen, agminis n.
+column (of men)
+
+ago, -ere, egi, actum
+I do, drive, spend (time)
+
+gratias ago
+I give thanks
+
+agricola, agricolae m
+farmer
+
+aliquis, -qua, -quid
+someone, anyone
+
+alius, -a, -ud (alii ... alii)
+another, other (some ... others)
+
+alter, altera, alterum
+the other, second
+
+altus, -a, -um
+high, deep
+
+ambulo (1)
+I walk
+
+amica, amicae f.
+friend (female)
+
+amicus, amici m
+friend (male)
+
+amitto, -ere, amisi, amissum
+I lose
+
+amo (1)
+I love
+
+amor, amoris m
+love
+
+an (utrum ... an)
+or (whether ... or)
+
+ancilla, ancillae f.
+slave-girl, maid
+
+animus, animi m
+mind, heart, feeling, spirit
+
+in animo habeo (2)
+I have in mind, I intend
+
+annus, anni m
+year
+
+ante + acc.
+before, in front of
+
+antea
+previously
+
+appareo (2)
+I appear
+
+appropinquo (1) + dat.
+I approach
+
+aptus, -a, -um
+suitable, appropriate
+
+apud + acc.
+with, among, at the house of
+
+aqua, aquae f.
+water
+
+arcesso, -ere, -ivi, -itum
+I summon, I call
+
+arbor, arboris f.
+tree
+
+arma, armorum n. pl.
+arms, weapons
+
+ars, artis f.
+art, skill
+
+ascendo, -ere, ascendi, ascensum
+I climb, I go up
+
+atrox, atrocis
+harsh, terrible
+
+attonitus, -a, -um
+astonished
+
+audax, audacis
+bold
+
+audeo, -ere, ausus sum
+I dare
+
+audio (4)
+I hear
+
+aufero, auferre, abstuli, ablatum
+I take away, I steal
+
+aut (aut ... aut)
+or (either ... or)
+
+autem
+but, however
+
+auxilium, auxilii n.
+help
+
+barbarus, -a, -um
+barbarian
+
+bellum, belli n.
+war
+
+bene
+well
+
+benignus, -a, -um
+kind
+
+bibo, -ere, bibi
+I drink
+
+bonus, -a, -um
+good
+
+brevis, -is, -e
+short
+
+cado, -ere, cecidi, casum
+I fall
+
+caedo, -ere, cecidi, caesum
+I cut, I kill
+
+caelum, caeli n.
+sky
+
+callidus, -a, -um
+clever, cunning
+
+campus, campi m.
+plain
+
+canis, canis m. f.
+dog
+
+capio, -ere, cepi, captum
+I take, I capture
+
+captivus, captivi m.
+prisoner
+
+caput, capitis n.
+head
+
+carus, -a, -um
+dear
+
+castra, castrorum n. pl.
+camp
+
+casus, casus m.
+event, accident, misfortune
+
+causa, causae f.
+cause, reason
+
+cedo, -ere, cessi, cessum
+I go, I give way, I yield
+
+celer, -is, -e
+swift, fast
+
+celo (1)
+I hide, I conceal
+
+cena, cenae f.
+dinner
+
+ceno (1)
+I dine
+
+centurio, centurionis m.
+centurion
+
+certus, -a, -um
+certain, definite
+
+ceteri, -ae, -a
+the rest (of)
+
+cibus, cibi m.
+food
+
+circum + acc.
+around
+
+civis, civis m. f.
+citizen
+
+civitas, civitatis f.
+state, community
+
+clamo (1)
+I shout
+
+clamor, clamoris m
+shout
+
+coepi, coepisse, coeptum
+I begin, I have begun
+
+cogito (1)
+I think
+
+cognosco, -ere, cognovi, cognitum
+I get to know, I find out
+
+cogo, -ere, coegi, coactum
+I compel
+
+colligo, -ere, collegi, collectum
+I collect
+
+colloquor (3 dep.)
+I converse, I hold a conversation
+
+comes, comitis m. f.
+companion
+
+comparo (1)
+I prepare, I gain, I obtain
+
+conficio, -ere, confeci, confectum
+I finish, I wear out
+
+coniunx, coniugis m. f.
+husband, wife
+
+conor (1 dep.)
+I try
+
+consilium, consilii n.
+plan, policy
+
+consilium capio
+I think of a plan, I have an idea
+
+conspicio, -ere, conspexi, conspectum
+I catch sight of, I see
+
+constituo, -ere, constitui, constitutum
+I decide
+
+consul, consulis m.
+consul
+
+consumo, -ere, consumpsi, consumptum
+I eat, I use up
+
+contendo, -ere, contendi, contentum
+I hurry, I stretch, I fight
+
+contentus, -a, -um
+satisfied, happy, content
+
+contra + acc.
+against
+
+convenio, -ire, conveni, conventum
+I meet, I gather, I come together
+
+copiae, copiarum f. pl.
+forces, troops
+
+corpus, corporis n.
+body
+
+cotidie
+every day
+
+cras
+tomorrow
+
+credo, -ere, credidi, creditum + dat.
+I believe, I trust
+
+crimen, criminis n.
+charge, accusation
+
+crudelis, -is, -e
+cruel
+
+culpo (1)
+I find fault with, I blame
+
+cum + abl.
+with
+
+cum + ind.
+when
+
+cum + subj.
+when, since, although
+
+cupio, -ere, cupivi, cupitum
+I desire
+
+cur?
+why?
+
+cura, curae f.
+care, concern
+
+curro, -ere, cucurri, cursum
+I run
+
+custodio (4)
+I guard
+
+custos, custodis m.
+guard
+
+de + abl.
+down from, concerning
+
+dea, deae f.
+goddess
+
+debeo (2)
+I owe, I ought, I have to
+
+decipio, -ere, decepi, deceptum
+I deceive
+
+dedo, -ere, dedidi, deditum
+I surrender
+
+defendo, -ere, defendi, defensum
+I defend
+
+deinde
+then, next
+
+deleo, -ere, delevi, deletum
+I destroy
+
+delibero (1)
+I deliberate, I consider seriously
+
+descendo, -ere, descendi, descensum
+I descend
+
+despero (1)
+I give up hope, I despair
+
+deus, dei m
+god
+
+dico, -ere, dixi, dictum
+I say, I tell
+
+dies, diei m/f
+day
+
+difficilis, -is, -e
+difficult
+
+dignus, -a, -um + abl.
+worthy, deserving (of)
+
+diligens, -ntis
+diligent, hard-working
+
+diligentia, diligentiae f.
+diligence, industry, care
+
+dirus, -a, -um
+awful, dreadful
+
+discedo, -ere, discessi, discessum
+I depart, I go away
+
+disciplina, disciplinae f.
+training, education, discipline
+
+disco, -ere, didici
+I learn
+
+diu
+for a long time
+
+dives, divitis
+rich, wealthy
+
+do, dare, dedi, datum
+I give
+
+doceo, -ere, docui, doctum
+I teach
+
+dolor, doloris m.
+pain, grief, sorrow
+
+domina, dominae f.
+mistress
+
+dominus, domini m.
+master
+
+domus, domus f.
+house
+
+donum, doni n.
+gift
+
+dormio (4)
+I sleep
+
+dubito (1)
+I doubt, I hesitate
+
+dubius, -a, -um
+doubtful
+
+duco, -ere, duxi, ductum
+I lead
+
+dum + ind.
+while
+
+durus, -a, -um
+hard, harsh
+
+dux, ducis m/f
+leader, commander, guide
+
+e (ex) + abl.
+out of, from
+
+ecce!
+look! behold!
+
+efficio, -ere, effeci, effectum
+I bring about, I accomplish
+
+effugio, -ere, effugi
+I escape, I flee
+
+ego
+I
+
+egredior, egredi, egressus sum
+I go out
+
+eheu!
+oh dear! alas!
+
+emo, -ere, emi, emptum
+I buy
+
+enim
+for
+
+eo
+to there, thither
+
+eo, ire, ivi, itum
+I go
+
+epistula, epistulae f.
+letter
+
+eques, equitis m.
+cavalryman, rider; cavalry
+
+equus, equi m.
+horse
+
+et
+and (both ... and)
+
+etiam
+even, also
+
+excito (1)
+I rouse, I stir up
+
+exeo, exire, exii, exitum
+I go out
+
+exercitus, exercitus m.
+army
+
+exspecto (1)
+I expect, I wait for
+
+extra + acc.
+outside, beyond
+
+extremus, -a, -um
+furthest, last
+
+fabula, fabulae f.
+story, tale
+
+facilis, -is, -e
+easy
+
+facio, -ere, feci, factum
+I make, I do
+
+fallo, -ere, fefelli, falsum
+I deceive, I trick
+
+fama, famae f.
+rumour, reputation
+
+felix, felicis
+lucky, happy
+
+femina, feminae f.
+woman
+
+fero, ferre, tuli, latum
+I carry, I bring, I bear, I endure
+
+ferox, ferocis
+fierce
+
+fessus, -a, -um
+tired
+
+fidelis, -is, -e
+faithful, loyal
+
+fides, fidei f.
+faith, confidence, honesty
+
+filia, filiae f.
+daughter
+
+filius, filii m.
+son
+
+finis, finis m.
+end
+
+fio, fieri, factus sum
+I become, I am made
+
+flumen, fluminis n.
+river
+
+fons, fontis m.
+spring, fountain
+
+forma, formae f.
+form, beauty, shape
+
+forte
+by chance
+
+fortis, -is, -e
+brave
+
+fortuna, -ae f.
+fortune, chance, luck
+
+forum, fori n.
+forum, market-place
+
+frango, -ere, fregi, fractum
+I break
+
+frater, fratris m.
+brother
+
+frustra
+in vain
+
+fuga, fugae f.
+flight
+
+fugio, -ere, fugi
+I flee, I run away
+
+gaudeo, -ere, gavisus sum
+I am happy, I rejoice
+
+gaudium, gaudii n.
+joy
+
+gens, gentis f.
+tribe, nation, race
+
+gero, -ere, gessi, gestum
+I do, I wear, I carry
+
+bellum gero
+I wage war
+
+gladiator, gladiatoris m.
+gladiator
+
+gladius, gladii m.
+sword
+
+gloria, gloriae f.
+glory
+
+gravis, -is, -e
+heavy, severe, important
+
+habeo (2)
+I have
+
+habito (1)
+I live, I reside
+
+hasta, hastae f.
+spear
+
+heri
+yesterday
+
+hic
+here
+
+hic, haec, hoc
+this (he, she, it)
+
+hinc
+from here, hence
+
+hodie
+today
+
+homo, hominis m.
+man, person
+
+hora, horae f.
+hour
+
+hortor (1 dep.)
+I encourage
+
+hortus, horti m.
+garden
+
+hostis, hostis m/f
+enemy
+
+huc
+to here, hither
+
+iaceo (2)
+I lie
+
+iacio, -ere, ieci, iactum
+I throw
+
+iam
+now, already
+
+ianua, ianuae f.
+door, entrance
+
+ibi
+there
+
+idem, eadem, idem
+same
+
+idoneus, -a, -um
+suitable
+
+igitur
+therefore
+
+ignavus, -a, -um
+lazy, cowardly
+
+ignis, ignis m.
+fire
+
+ille, illa, illud
+that (he, she, it)
+
+illuc
+to there, thither
+
+imperator, imperatoris m.
+emperor, commander, general
+
+imperium, imperii n.
+command, power, order
+
+impero (1) + dat.
+I order
+
+impetus, impetus m.
+charge, assault, attack
+
+in + acc.
+into, onto, against
+
+in + abl.
+in, on
+
+incendo, -ere, incendi, incensum
+I set fire to
+
+incipio, -ere, incepi, inceptum
+I begin
+
+inde
+from there, thence
+
+infelix, infelicis
+unlucky
+
+ingens, -ntis
+huge, enormous
+
+ingredior, ingredi, ingressus sum
+I enter, I go in
+
+inimicus, -a, -um
+hostile, unfriendly
+
+inquit
+he/she says
+
+insanus, -a, -um
+mad, insane
+
+insignis, -is, -e
+distinguished, remarkable
+
+insula, insulae f.
+island, block of flats
+
+intellego, -ere, intellexi, intellectum
+I understand, I realise
+
+inter + acc.
+between, among
+
+interea
+meanwhile
+
+interficio, -ere, interfeci, interfectum
+I kill
+
+intra + acc.
+inside, within
+
+intro (1)
+I enter
+
+invideo, -ere, invidi, invisum + dat.
+I envy, I hate
+
+invenio, invenire, inveni, inventum
+I come across, I find
+
+invito (1)
+I invite
+
+invitus, -a, -um
+reluctant, unwilling
+
+ipse, ipsa, ipsum
+self
+
+ira, irae f.
+anger
+
+iratus, -a, -um
+angry
+
+is, ea, id
+this, that, he, she, it
+
+iste, ista, istud
+that one
+
+ita
+so, thus
+
+ita vero
+yes, indeed, certainly
+
+Italia, Italiae f.
+Italy
+
+itaque
+and so, therefore
+
+iter, itineris n.
+journey, march
+
+iterum
+again
+
+iubeo, -ere, iussi, iussum
+I order
+
+iudex, iudicis m.
+judge, juror
+
+iudico (1)
+I judge
+
+iungo, -ere, iunxi, iunctum
+I join
+
+iustus, -a, -um
+just, right
+
+iuvenis, iuvenis m.
+young man
+
+labor, laboris m.
+work
+
+laboro (1)
+I work
+
+labor, labi, lapsus sum
+I slip, I slide, I glide
+
+lacrimo (1)
+I weep, I cry
+
+laetus, -a, -um
+happy
+
+latus, lateris n.
+side
+
+latus, -a, -um
+broad, wide
+
+laudo (1)
+I praise
+
+laus, laudis f.
+praise, glory
+
+legatus, legati m.
+envoy, senior officer
+
+legio, legionis f.
+legion
+
+lego, -ere, legi, lectum
+I read
+
+lente
+slowly
+
+lex, legis f.
+law
+
+libenter
+gladly, willingly
+
+liber, libri m.
+book
+
+liber, libera, liberum
+free
+
+liberi, liberorum m. pl.
+children
+
+libero (1)
+I free
+
+libertus, liberti m.
+freedman
+
+licet + subj.
+although
+
+licet, -ere, licuit, licitum
+it is allowed
+
+litus, litoris n.
+shore
+
+locus, loci m.
+place
+
+longe
+far off
+
+longus, -a, -um
+long
+
+loquor, loqui, locutus sum
+I speak
+
+ludo, -ere, lusi, lusum
+I play
+
+ludus, ludi m.
+game, play, school
+
+luna, lunae f.
+moon
+
+lux, lucis f.
+light
+
+magister, magistri m.
+teacher
+
+magnopere
+very much, especially
+
+magnus, -a, -um
+large, great
+
+malo, malle, malui, –
+I prefer
+
+malus, -a, -um
+bad
+
+maneo, -ere, mansi, mansum
+I remain, I stay
+
+manus, manus f.
+hand, band (of men)
+
+mare, maris n.
+sea
+
+mater, matris f.
+mother
+
+matrimonium, matrimonii n.
+marriage
+
+medicus, medici m.
+doctor
+
+medius, -a, -um
+middle, the middle of
+
+memini, meminisse
+I remember, I recollect
+
+mens, mentis f.
+mind, intellect, purpose
+
+mensa, mensae f.
+table
+
+mercator, mercatoris m.
+merchant
+
+metus, metus m.
+fear
+
+meus, -a, -um
+my
+
+miles, militis m.
+soldier
+
+mirabilis, -is, -e
+wonderful, amazing
+
+miror (1 dep.)
+I wonder at, I admire
+
+miser, misera, miserum
+wretched, unfortunate
+
+mitto, -ere, misi, missum
+I send
+
+modo
+only, just now
+
+modus, modi m.
+way, method, measure, end, limit
+
+moneo (2)
+I advise, warn
+
+mons, montis m.
+mountain
+
+morbus, morbi m.
+disease, illness, sickness
+
+morior, mori, mortuus sum
+I die
+
+mors, mortis f.
+death
+
+mos, moris m.
+custom
+
+moveo, -ere, movi, motum
+I move
+
+mox
+soon
+
+multitudo, multitudinis f.
+crowd, a great number
+
+multus, -a, -um
+much, many
+
+munio (4)
+I fortify, I protect
+
+murus, muri m.
+wall
+
+nam (namque)
+for
+
+narro (1)
+I tell, I relate
+
+nascor, nasci, natus sum
+I am born
+
+nauta, nautae m.
+sailor
+
+navigo (1)
+I sail
+
+navis, navis f.
+ship
+
+ne
+lest, in case, in order that ... not
+
+ne (enclitic): -ne
+(introduces question)
+
+nec (neque)
+neither (neither ... nor)
+
+necesse
+necessary
+
+neglego, -ere, neglexi, neglectum
+I neglect
+
+nego (1)
+I deny, I say that ... not
+
+nemo, nullius
+nobody
+
+nescio, -ire, nescivi, nescitum
+I do not know
+
+nihil
+nothing
+
+nisi
+unless, except (if ... not)
+
+nolo, nolle, nolui
+I do not want, I am unwilling
+
+nomen, nominis n.
+name
+
+non modo ... sed etiam
+not only ... but also
+
+nondum
+not yet
+
+nonne?
+surely?
+
+nonnullus, -a, -um
+some, several
+
+nos
+we
+
+noster, nostra, nostrum
+our
+
+novus, -a, -um
+new
+
+nox, noctis f.
+night
+
+nullus, -a, -um
+none, no
+
+num?
+surely ... not?
+
+num
+whether
+
+numquam
+never
+
+nunc
+now
+
+nuntio (1)
+I announce
+
+nuntius, nuntii m.
+messenger, message
+
+nuper
+recently
+
+ob + acc.
+on account of, because of
+
+obliviscor, oblivisci, oblitus sum + gen.
+I forget, I am forgetful of
+
+occasio, occasionis f.
+opportunity
+
+occido, -ere, occidi, occisum
+I kill, I strike down
+
+occupo (1)
+I seize, I occupy, I attack
+
+occurro, -ere, occurri, occursum + dat.
+I meet, I run up to
+
+oculus, oculi m.
+eye
+
+odi, odisse
+I hate
+
+odium, odii n.
+hatred
+
+offero, offerre, obtuli, oblatum
+I offer, I present
+
+olim
+once upon a time, once
+
+omnis, -is, -e
+all, every
+
+onus, oneris n.
+burden, load
+
+oppidum, oppidi n.
+town
+
+opprimo, -ere, oppressi, oppressum
+I overwhelm, I crush
+
+oppugno (1)
+I attack
+
+opus, operis n.
+work, piece of work
+
+orno (1)
+I adorn, I decorate, I make attractive
+
+oro (1)
+I beg, I pray
+
+os, oris n.
+mouth, face
+
+ostendo, -ere, ostendi, ostentum
+I show, I display
+
+otium, otii n.
+leisure
+
+paene
+almost
+
+panis, panis m.
+bread
+
+parco, -ere, peperci, parsum + dat.
+I spare
+
+parens, parentis m/f
+parent
+
+pareo (2) + dat.
+I obey
+
+paro (1)
+I prepare
+
+pars, partis f.
+part
+
+parvus, -a, -um
+small
+
+pater, patris m.
+father
+
+patior, pati, passus sum
+I suffer, I endure, I allow
+
+patria, patriae f.
+homeland
+
+pauci, -ae, -a
+few, a few
+
+paulisper
+for a short while
+
+pauper, pauperis
+poor, a poor person
+
+pax, pacis f.
+peace
+
+pecunia, pecuniae f.
+money
+
+per + acc.
+through
+
+pereo, perire, perii, peritum
+I perish, I am lost, I am destroyed
+
+periculum, periculi n.
+danger
+
+permitto, -ere, permisi, permissum + dat.
+I allow, I entrust
+
+persuadeo, -ere, persuasi, persuasum + dat.
+I persuade
+
+perterritus, -a, -um
+terrified
+
+pervenio, pervenire, perveni, perventum
+I arrive
+
+pes, pedis m.
+foot
+
+peto, -ere, petivi, petitum
+I seek, I make for, I attack
+
+placet (2)
+it pleases
+
+plebs, plebis f.
+common people
+
+plenus, -a, -um
+full
+
+poena, poenae f.
+punishment, penalty
+
+poenas do
+I pay the penalty
+
+poeta, poetae m.
+poet
+
+pono, -ere, posui, positum
+I place, I put
+
+pons, pontis m.
+bridge
+
+populus, populi m.
+people
+
+porta, portae f.
+gate
+
+porto (1)
+I carry
+
+portus, portus m.
+port, harbour
+
+posco, -ere, poposci
+I demand, I ask
+
+possum, posse, potui
+I can, I am able
+
+post + acc.
+after, behind
+
+postea
+afterwards
+
+postquam
+after, when
+
+postridie
+next day
+
+potestas, potestatis f.
+power
+
+praebeo (2)
+I offer, I supply, I show
+
+praeda, praedae f.
+plunder, booty, prey
+
+praefectus, praefecti m.
+prefect, commander, chief
+
+praemium, praemii n.
+reward
+
+praeter + acc.
+except, apart from
+
+praeterea
+moreover, furthermore
+
+pretium, pretii n.
+price
+
+primo
+first, at first
+
+primum
+first, at first
+
+princeps, principis m.
+chief, leader
+
+priusquam
+before
+
+pro + abl.
+on behalf of
+
+procedo, -ere, processi, processum
+I proceed, I go forwards
+
+procul
+in the distance, far off
+
+prodo, -ere, prodidi, proditum
+I betray
+
+proelium, proelii n.
+battle
+
+proficiscor, proficisci, profectus sum
+I set out
+
+progredior, progredi, progressus sum
+I advance
+
+prohibeo (2)
+I prevent, I forbid
+
+promitto
+I promise
+
+prope + acc.
+near
+
+prope
+near
+
+propter + acc.
+because of
+
+proximus, -a, -um
+nearest, next
+
+prudens, prudentis
+wise, sensible
+
+publicus, -a, -um
+public
+
+puella, puellae f.
+girl
+
+puer, pueri m.
+boy
+
+pugna, pugnae f.
+fight
+
+pugno (1)
+I fight
+
+pulcher, pulchra, pulchrum
+beautiful
+
+punio (4)
+I punish
+
+puto (1)
+I think
+
+quaero, -ere, quaesivi, quaesitum
+I search for, I ask
+
+qualis?
+of what sort?
+
+quam
+than
+
+quam + superlative
+as ... as possible
+
+quamquam
+although
+
+quamvis + subj.
+although
+
+quando?
+when?
+
+quantus?
+how great?
+
+que (enclitic): -que
+and
+
+qui, quae, quod
+who, which
+
+quia
+because
+
+quidam, quaedam, quoddam
+a certain
+
+quidem
+indeed
+
+quis?
+who?
+
+quisque
+each
+
+quo?
+to where?
+
+quod
+because
+
+quomodo?
+how?
+
+quoniam
+since
+
+quoque
+also
+
+quot?
+how many?
+
+rapio, -ere, rapui, raptum
+I seize, I snatch
+
+reddo, -ere, reddidi, redditum
+I give back
+
+redeo, redire, redii, reditum
+I return
+
+refero, referre, rettuli, relatum
+I bring back
+
+regina, reginae f.
+queen
+
+regnum, regni n.
+kingdom
+
+rego, -ere, rexi, rectum
+I rule
+
+regredior, regredi, regressus sum
+I go back
+
+relinquo, -ere, reliqui, relictum
+I leave behind
+
+reliquus, -a, -um
+remaining
+
+res, rei f.
+thing, matter
+
+res publica
+state
+
+resisto, -ere, restiti + dat.
+I resist
+
+respondeo, -ere, respondi, responsum
+I reply
+
+responsum, responsi n.
+answer
+
+rex, regis m.
+king
+
+rideo, -ere, risi, risum
+I laugh
+
+ripa, ripae f.
+river bank
+
+rogo (1)
+I ask
+
+Roma, Romae f.
+Rome
+
+Romanus, -a, -um
+Roman
+
+rus, ruris n.
+countryside
+
+sacer, sacra, sacrum
+holy
+
+saepe
+often
+
+saevus, -a, -um
+fierce
+
+sagitta, sagittae f.
+arrow
+
+salus, salutis f.
+safety, health
+
+saluto (1)
+I greet
+
+salve!
+hello
+
+sanguis, sanguinis m.
+blood
+
+sapiens, sapientis
+wise
+
+sapientia, sapientiae f.
+wisdom
+
+satis
+enough
+
+scelus, sceleris n.
+crime
+
+scio, -ire, scivi, scitum
+I know
+
+scribo, -ere, scripsi, scriptum
+I write
+
+scutum, scuti n.
+shield
+
+se
+himself, herself, itself
+
+secundus, -a, -um
+second, favourable
+
+sed
+but
+
+semper
+always
+
+senex, senis m.
+old man
+
+sententia, sententiae f.
+opinion, sentence
+
+sentio, -ire, sensi, sensum
+I feel
+
+sequor, sequi, secutus sum
+I follow
+
+servus, servi m.
+slave
+
+servo (1)
+I save, I keep
+
+si
+if
+
+sic
+thus
+
+signum, signi n.
+sign, signal
+
+silentium, silentii n.
+silence
+
+silva, silvae f.
+wood, forest
+
+simul
+at the same time
+
+simulac
+as soon as
+
+simulo (1)
+I pretend
+
+sin
+but if
+
+sine + abl.
+without
+
+singuli, -ae, -a
+one each
+
+sino, -ere, sivi, situm
+I allow
+
+socius, socii m.
+ally, companion
+
+sol, solis m.
+sun
+
+soleo, -ere, solitus sum
+I am accustomed
+
+sollicitus, -a, -um
+worried
+
+solus, -a, -um
+alone
+
+solvo, -ere, solvi, solutum
+I loosen, I pay
+
+somnus, somni m.
+sleep
+
+sonitus, sonitus m.
+sound
+
+soror, sororis f.
+sister
+
+specto (1)
+I look at
+
+sperno, -ere, sprevi, spretum
+I despise
+
+spero (1)
+I hope
+
+spes, spei f.
+hope
+
+spiritus, spiritus m.
+breath, spirit
+
+spolio (1)
+I strip, I rob
+
+statim
+immediately
+
+sto, stare, steti, statum
+I stand
+
+studium, studii n.
+eagerness, study
+
+sub + acc./abl.
+under, below
+
+subito
+suddenly
+
+sum, esse, fui
+I am
+
+summus, -a, -um
+highest, greatest
+
+super + acc./abl.
+above, over
+
+supero (1)
+I overcome
+
+supersum, superesse, superfui
+I survive
+
+surgo, -ere, surrexi, surrectum
+I rise
+
+suscipio, -ere, suscepi, susceptum
+I undertake
+
+sustineo, -ere, sustinui, sustentum
+I sustain
+
+suus, -a, -um
+his, her, its (own)
+
+taberna, tabernae f.
+shop, inn
+
+tabula, tabulae f.
+tablet, writing board
+
+taceo, -ere, tacui, tacitum
+I am silent
+
+talis, -is, -e
+such
+
+tam
+so
+
+tamen
+however
+
+tandem
+at last
+
+tantus, -a, -um
+so great
+
+tectum, tecti n.
+roof, house
+
+tego, -ere, texi, tectum
+I cover
+
+telum, teli n.
+weapon, missile
+
+tempestas, tempestatis f.
+storm
+
+templum, templi n.
+temple
+
+tempus, temporis n.
+time
+
+teneo, -ere, tenui, tentum
+I hold
+
+terra, terrae f.
+earth, land
+
+terreo, -ere, terrui, territum
+I frighten
+
+timeo, -ere, timui
+I fear
+
+timor, timoris m.
+fear
+
+tollo, -ere, sustuli, sublatum
+I lift, I remove
+
+tot
+so many
+
+totus, -a, -um
+whole
+
+tracto (1)
+I handle
+
+traho, -ere, traxi, tractum
+I drag
+
+trans + acc.
+across
+
+transeo, transire, transii, transitum
+I cross
+
+tres, tria
+three
+
+tribunus, tribuni m.
+tribune
+
+tristis, -is, -e
+sad
+
+tu
+you (sing.)
+
+tueor, tueri, tuitus sum
+I protect
+
+tum
+then
+
+turba, turbae f.
+crowd
+
+tutus, -a, -um
+safe
+
+tuus, -a, -um
+your (sing.)
+
+ubi
+where
+
+ullus, -a, -um
+any
+
+ultimus, -a, -um
+last
+
+umbra, umbrae f.
+shadow
+
+unde
+from where
+
+undique
+from all sides
+
+unus, -a, -um
+one
+
+urbs, urbis f.
+city
+
+ut + ind.
+as, when
+
+ut + subj.
+that, in order that
+
+uter, utra, utrum
+which of two?
+
+uterque, utraque, utrumque
+each of two
+
+uxor, uxoris f.
+wife
+
+vale!
+goodbye
+
+validus, -a, -um
+strong
+
+vallum, valli n.
+rampart
+
+varius, -a, -um
+various
+
+vehementer
+violently
+
+vel
+or
+
+velut
+just as
+
+vendo, -ere, vendidi, venditum
+I sell
+
+venio, venire, veni, ventum
+I come
+
+ventus, venti m.
+wind
+
+verbum, verbi n.
+word
+
+vereor, vereri, veritus sum
+I fear, I respect
+
+verto, -ere, verti, versum
+I turn
+
+verus, -a, -um
+true
+
+vester, vestra, vestrum
+your (pl.)
+
+via, viae f.
+road, way
+
+victoria, victoriae f.
+victory
+
+video, -ere, vidi, visum
+I see
+
+videor, videri, visus sum
+I seem
+
+villa, villae f.
+house, villa
+
+vinco, -ere, vici, victum
+I conquer
+
+vinum, vini n.
+wine
+
+vir, viri m.
+man
+
+virgo, virginis f.
+girl, maiden
+
+virtus, virtutis f.
+courage, virtue
+
+vis, vim, vi f.
+force, violence
+
+vita, vitae f.
+life
+
+vito (1)
+I avoid
+
+vivo, -ere, vixi, victum
+I live
+
+vix
+hardly
+
+vocatio, vocationis f.
+summons, call
+
+vociferor (1)
+I shout, I protest
+
+voco (1)
+I call
+
+volo, velle, volui
+I want
+
+volucris, volucris f.
+bird
+
+voluntas, voluntatis f.
+will, wish
+
+voluptas, voluptatis f.
+pleasure
+
+vos
+you (pl.)
+
+vox, vocis f.
+voice
+
+vulnero (1)
+I wound
+
+vulnus, vulneris n.
+wound
+
+vultus, vultus m.
+face, expression
+`;
+
+// ——— Parse RAW_LIST into structured vocab ———
+const VOCAB = [];
+(function parseRawList() {
+    const lines = RAW_LIST.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    for (let i = 0; i < lines.length; i += 2) {
+        const latin = lines[i];
+        const english = lines[i + 1] || "";
+        VOCAB.push({ latin, english });
+    }
+})();
+
+// ——— State ———
+let answerMode = "typed";            // 'typed' | 'mcq'
+let useMistakesOnly = false;
+let filterLetter = null;             // null = all
+let currentIndex = null;
+let currentMCQChoices = [];
+let totalAsked = 0;
+let totalCorrect = 0;
+// mistakeCounts: key = index in VOCAB, value = { count, lastEnglish }
+const mistakeCounts = {};
+
+// ——— UI helpers ———
+function initUI() {
+    // letter buttons
+    const cont = document.getElementById("letter-buttons");
+    const letters = "abcdefghijklmnopqrstuvwxyz".split("");
+    letters.forEach(letter => {
+        const b = document.createElement("button");
+        b.textContent = letter.toUpperCase();
+        b.dataset.letter = letter;
+        b.onclick = () => setLetter(letter);
+        cont.appendChild(b);
+    });
+    updateStats();
+}
+
+function setAnswerMode(mode) {
+    answerMode = mode;
+    document.getElementById("mode-typed").classList.toggle("active", mode === "typed");
+    document.getElementById("mode-typed").classList.toggle("secondary", mode !== "typed");
+    document.getElementById("mode-mcq").classList.toggle("active", mode === "mcq");
+    document.getElementById("mode-mcq").classList.toggle("secondary", mode !== "mcq");
+
+    const input = document.getElementById("answer-input");
+    const submitBtn = document.getElementById("submit-btn");
+    const options = document.getElementById("options");
+    document.getElementById("result").textContent = "";
+    document.getElementById("result").className = "";
+    options.innerHTML = "";
+
+    if (mode === "typed") {
+        input.style.display = "block";
+        submitBtn.style.display = "inline-block";
+    } else {
+        input.style.display = "none";
+        submitBtn.style.display = "none";
+    }
+}
+
+function setMistakeMode(flag) {
+    useMistakesOnly = flag;
+    document.getElementById("pool-all").classList.toggle("active", !flag);
+    document.getElementById("pool-all").classList.toggle("secondary", flag);
+    document.getElementById("pool-mistakes").classList.toggle("active", flag);
+    document.getElementById("pool-mistakes").classList.toggle("secondary", !flag);
+    nextQuestion();
+}
+
+function setLetter(letter) {
+    filterLetter = letter;
+
+    const allButtons = document.querySelectorAll(".filters button");
+    allButtons.forEach(b => b.classList.remove("active"));
+
+    const allBtn = document.querySelector('.filters button[data-letter="all"]');
+    if (!letter && allBtn) allBtn.classList.add("active");
+
+    const letterBtns = document.querySelectorAll("#letter-buttons button");
+    letterBtns.forEach(b => {
+        if (b.dataset.letter === letter) b.classList.add("active");
+    });
+
+    nextQuestion();
+}
+
+function getPoolIndices() {
+    let indices = [];
+    if (useMistakesOnly) {
+        // use only words that have mistakes
+        for (const key in mistakeCounts) {
+            const idx = parseInt(key, 10);
+            if (!Number.isNaN(idx)) indices.push(idx);
+        }
+    } else {
+        for (let i = 0; i < VOCAB.length; i++) indices.push(i);
+    }
+
+    if (!filterLetter) return indices;
+
+    const filtered = indices.filter(i => {
+        const latin = VOCAB[i].latin.trim().toLowerCase();
+        const firstLetter = latin[0];
+        return firstLetter === filterLetter;
+    });
+    return filtered;
+}
+
+// ——— Question generation ———
+function nextQuestion() {
+    const questionBox = document.getElementById("question-box");
+    const posInfo = document.getElementById("pos-info");
+    const resultEl = document.getElementById("result");
+    const optionsCont = document.getElementById("options");
+
+    resultEl.textContent = "";
+    resultEl.className = "";
+    optionsCont.innerHTML = "";
+
+    const pool = getPoolIndices();
+    if (pool.length === 0) {
+        if (useMistakesOnly) {
+            questionBox.textContent = "No mistakes recorded yet (or none matching this letter filter).";
+        } else {
+            questionBox.textContent = "No words match this filter.";
+        }
+        posInfo.textContent = "";
+        return;
+    }
+
+    const randomIndex = pool[Math.floor(Math.random() * pool.length)];
+    currentIndex = randomIndex;
+    const entry = VOCAB[currentIndex];
+
+    questionBox.textContent = entry.latin;
+    posInfo.textContent = ""; // could add POS if you embed it later
+
+    if (answerMode === "mcq") {
+        buildMCQ(entry, pool);
+    } else {
+        const input = document.getElementById("answer-input");
+        input.value = "";
+        input.focus();
+    }
+}
+
+function buildMCQ(correctEntry, pool) {
+    const optionsCont = document.getElementById("options");
+    optionsCont.innerHTML = "";
+
+    const indices = [...pool];
+    const chosen = new Set();
+    chosen.add(currentIndex);
+
+    while (chosen.size < 4 && chosen.size < indices.length) {
+        const idx = indices[Math.floor(Math.random() * indices.length)];
+        chosen.add(idx);
+    }
+
+    const arr = Array.from(chosen);
+    arr.sort(() => Math.random() - 0.5);
+    currentMCQChoices = arr;
+
+    arr.forEach(idx => {
+        const div = document.createElement("div");
+        div.className = "option";
+        div.textContent = VOCAB[idx].english;
+        div.onclick = () => handleMCQ(idx);
+        optionsCont.appendChild(div);
+    });
+}
+
+// ——— Answer checking ———
+function submitAnswer() {
+    if (answerMode === "mcq") return;
+    if (currentIndex == null) return;
+
+    const entry = VOCAB[currentIndex];
+    const input = document.getElementById("answer-input");
+    const user = input.value.trim().toLowerCase();
+    const correct = entry.english.trim().toLowerCase();
+
+    const resultEl = document.getElementById("result");
+    totalAsked++;
+
+    if (user === correct) {
+        totalCorrect++;
+        resultEl.textContent = "✔ Correct";
+        resultEl.className = "correct";
+    } else {
+        resultEl.textContent = "✘ Incorrect — correct answer: " + entry.english;
+        resultEl.className = "incorrect";
+        recordMistake(currentIndex, entry.english);
+    }
+    updateStats();
+}
+
+function handleMCQ(chosenIndex) {
+    if (currentIndex == null) return;
+    const entry = VOCAB[currentIndex];
+    const resultEl = document.getElementById("result");
+    const optionEls = document.querySelectorAll(".option");
+
+    totalAsked++;
+
+    optionEls.forEach(opt => {
+        if (opt.textContent === entry.english) {
+            opt.classList.add("correct");
+        }
+    });
+
+    if (chosenIndex === currentIndex) {
+        totalCorrect++;
+        resultEl.textContent = "✔ Correct";
+        resultEl.className = "correct";
+    } else {
+        resultEl.textContent = "✘ Incorrect — correct answer: " + entry.english;
+        resultEl.className = "incorrect";
+        recordMistake(currentIndex, entry.english);
+
+        optionEls.forEach(opt => {
+            if (opt.textContent === VOCAB[chosenIndex].english) {
+                opt.classList.add("incorrect");
+            }
+        });
+    }
+    updateStats();
+}
+
+function recordMistake(index, english) {
+    if (!mistakeCounts[index]) {
+        mistakeCounts[index] = { count: 0, english };
+    }
+    mistakeCounts[index].count++;
+    mistakeCounts[index].english = english;
+}
+
+// ——— Stats & report ———
+function updateStats() {
+    const statsEl = document.getElementById("stats");
+    const accuracy = totalAsked ? ((totalCorrect / totalAsked) * 100).toFixed(1) : "–";
+    const mistakeWords = Object.keys(mistakeCounts).length;
+
+    statsEl.innerHTML =
+        `Questions: ${totalAsked} &nbsp;|&nbsp; Correct: ${totalCorrect}` +
+        ` &nbsp;|&nbsp; Accuracy: ${accuracy}%` +
+        ` &nbsp;|&nbsp; Words with mistakes: ${mistakeWords}`;
+}
+
+function resetProgress() {
+    if (!confirm("Reset stats and clear all mistakes?")) return;
+    totalAsked = 0;
+    totalCorrect = 0;
+    for (const key in mistakeCounts) delete mistakeCounts[key];
+    updateStats();
+    document.getElementById("report-area").value = "";
+}
+
+function generateReport() {
+    const reportArea = document.getElementById("report-area");
+    const keys = Object.keys(mistakeCounts).sort((a, b) => mistakeCounts[b].count - mistakeCounts[a].count);
+    if (keys.length === 0) {
+        reportArea.value = "No mistakes recorded yet.";
+        return;
+    }
+
+    let lines = [];
+    lines.push("IGCSE Latin – Mistake report (Latin → English)");
+    lines.push(`Total words with mistakes: ${keys.length}`);
+    lines.push("");
+
+    keys.forEach(key => {
+        const idx = parseInt(key, 10);
+        const entry = VOCAB[idx];
+        const rec = mistakeCounts[key];
+        lines.push(`${entry.latin}  —  ${entry.english}  (mistakes: ${rec.count})`);
+    });
+
+    reportArea.value = lines.join("\n");
+}
+
+// ——— Start ———
+initUI();
+nextQuestion();
+</script>
+</body>
+</html>
